@@ -33,6 +33,8 @@ def relaxed_structs() -> dict[str, Atoms]:
     relaxed_structs = {}
 
     for model_name, calc in MODELS.items():
+        if calc.supported_elements is not None:
+            continue
         for struct_name in structs:
             struct = read(DATA_PATH / struct_name)
             struct.calc = calc.get_calculator()
@@ -61,6 +63,7 @@ def test_li_diffusion_b(relaxed_structs: dict[str, Atoms], model_name: str) -> N
     model_name
         Name of model to use.
     """
+    MODELS[model_name].skip_if_elements_unsupported()
     NEB(
         init_struct=relaxed_structs[f"LiFePO4_start_bc.cif-{model_name}"],
         final_struct=relaxed_structs[f"LiFePO4_end_b.cif-{model_name}"],
@@ -86,6 +89,7 @@ def test_li_diffusion_c(relaxed_structs: dict[str, Atoms], model_name: str) -> N
     model_name
         Name of model to use.
     """
+    MODELS[model_name].skip_if_elements_unsupported()
     NEB(
         init_struct=relaxed_structs[f"LiFePO4_start_bc.cif-{model_name}"],
         final_struct=relaxed_structs[f"LiFePO4_end_c.cif-{model_name}"],

@@ -100,6 +100,7 @@ def test_elasticity(mlip: tuple[str, Any]) -> None:
     """
     model_name, model = mlip
     calc = model.get_calculator()
+    model.skip_if_elements_unsupported()
     run_elasticity_benchmark(
         calc=calc,
         model_name=model_name,

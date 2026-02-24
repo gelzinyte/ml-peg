@@ -85,6 +85,7 @@ def test_lattice_consts(mlip: tuple[str, Any]) -> None:
     """
     model_name, model = mlip
     calc = model.get_calculator()
+    model.skip_if_elements_unsupported()
 
     data_dir = (
         download_s3_data(

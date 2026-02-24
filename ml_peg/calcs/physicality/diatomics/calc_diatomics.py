@@ -245,4 +245,5 @@ def test_diatomics(model_name: str) -> None:
     model_name
         Name of the model to evaluate.
     """
+    MODELS[model_name].skip_if_elements_unsupported()
     run_diatomics(model_name, MODELS[model_name])

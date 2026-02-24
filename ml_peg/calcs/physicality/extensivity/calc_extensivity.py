@@ -63,6 +63,7 @@ def test_extensivity(mlip: tuple[str, Any]) -> None:
     # Use double precision
     model.default_dtype = "float64"
     calc = model.get_calculator()
+    model.skip_if_elements_unsupported()
 
     sym1, sym2 = "Al", "Ni"  # element of slab-1 and slab-2
     layers = 8

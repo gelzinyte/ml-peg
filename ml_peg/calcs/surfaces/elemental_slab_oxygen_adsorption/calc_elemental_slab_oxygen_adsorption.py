@@ -104,6 +104,8 @@ class ElementalSlabOxygenAdsorptionBenchmark(zntrack.Node):
 
     def run(self):
         """Run oxygen adsorption energy calculations."""
+        if self.model.supported_elements is not None:
+            return
         calc = self.model.get_calculator()
         # Get benchmark data
         data_dir = (

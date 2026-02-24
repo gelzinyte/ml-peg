@@ -122,6 +122,8 @@ class OC157Benchmark(zntrack.Node):
 
     def run(self):
         """Run OC157 energy calculations."""
+        if self.model.supported_elements is not None:
+            return
         # Add D3 calculator and use double precision for this test
         self.model.default_dtype = "float64"
         calc = self.model.get_calculator()

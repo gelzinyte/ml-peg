@@ -82,6 +82,8 @@ def test_gmtkn55(mlip: tuple[str, Any]) -> None:
                     species["Elements"],
                     positions=np.array(species["Positions"]),
                 )
+                if not model.is_elements_supported(set(atoms.get_chemical_symbols())):
+                    continue
                 atoms.info["head"] = "mp_pbe"
                 atoms.info["subset_name"] = subset_name
                 atoms.info["system_name"] = system_name

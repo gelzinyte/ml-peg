@@ -39,6 +39,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ani = [
+    "torchani",
+]
 chgnet = [
     "chgnet == 0.4.0",
 ]

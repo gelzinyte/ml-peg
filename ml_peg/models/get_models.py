@@ -97,7 +97,13 @@ def load_models(models: None | str | Iterable = None) -> dict[str, Any]:
     dict[str, Any]
         Loaded models from models.yml.
     """
-    from ml_peg.models.models import FairChemCalc, GenericASECalc, OrbCalc, PetMadCalc
+    from ml_peg.models.models import (
+        ANICalc,
+        FairChemCalc,
+        GenericASECalc,
+        OrbCalc,
+        PetMadCalc,
+    )
 
     loaded_models = {}
 
@@ -115,6 +121,15 @@ def load_models(models: None | str | Iterable = None) -> dict[str, Any]:
                 task_name=kwargs.get("task_name", "omat"),
                 device=cfg.get("device", "cpu"),
                 overrides=kwargs.get("overrides", {}),
+                trained_on_d3=cfg.get("trained_on_d3", False),
+                d3_kwargs=cfg.get("d3_kwargs", {}),
+            )
+        elif cfg["class_name"] == "ANICalc":
+            kwargs = cfg.get("kwargs", {})
+            loaded_models[name] = ANICalc(
+                model_name=kwargs.get("model_name", "ANI2x"),
+                device=cfg.get("device", "cpu"),
+                default_dtype=cfg.get("default_dtype", "float32"),
                 trained_on_d3=cfg.get("trained_on_d3", False),
                 d3_kwargs=cfg.get("d3_kwargs", {}),
             )

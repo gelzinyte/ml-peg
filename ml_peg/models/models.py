@@ -29,6 +29,51 @@ class SumCalc:
 
     trained_on_d3: bool = False
     d3_kwargs: dict = dataclasses.field(default_factory=dict)
+    supported_elements: list[str] | None = None
+
+    def is_elements_supported(self, required: set[str]) -> bool:
+        """
+        Return whether this model supports all elements in ``required``.
+
+        Parameters
+        ----------
+        required
+            Set of chemical symbols to check.
+
+        Returns
+        -------
+        bool
+            ``True`` if the model has no element restriction, or if every
+            element in ``required`` is in ``supported_elements``.
+        """
+        if self.supported_elements is None:
+            return True
+        return required <= set(self.supported_elements)
+
+    def skip_if_elements_unsupported(self, required: set[str] | None = None) -> None:
+        """
+        Skip the current pytest test if this model has element restrictions.
+
+        Call with no arguments to skip unconditionally whenever
+        ``supported_elements`` is set (suitable for benchmarks known to
+        contain only unsupported elements).  Pass a set of chemical symbols
+        to skip only when a specific structure contains unsupported elements.
+
+        Parameters
+        ----------
+        required
+            Set of chemical symbols to check.  If ``None``, the test is
+            skipped whenever ``supported_elements`` is not ``None``.
+        """
+        import pytest
+
+        if self.supported_elements is None:
+            return
+        if required is None:
+            pytest.skip(f"Model only supports {self.supported_elements}")
+        unsupported = required - set(self.supported_elements)
+        if unsupported:
+            pytest.skip(f"Structure contains unsupported elements: {unsupported}")
 
     def add_d3_calculator(self, calcs) -> Calculator | SumCalculator:
         """
@@ -234,4 +279,55 @@ class FairChemCalc(SumCalc):
 
             return self.model_name in pretrained_mlip._MODEL_CKPTS.checkpoints
         except Exception:
+            return False
+
+
+@dataclasses.dataclass(kw_only=True)
+class ANICalc(SumCalc):
+    """Dataclass for TorchANI calculators (ANI-2x etc.)."""
+
+    model_name: str = "ANI2x"
+    device: Device | None = None
+    default_dtype: str = "float32"
+    kwargs: dict = dataclasses.field(default_factory=dict)
+    supported_elements: list[str] = dataclasses.field(
+        default_factory=lambda: ["H", "C", "N", "O", "S", "F", "Cl"]
+    )
+
+    def get_calculator(self) -> Calculator:
+        """
+        Prepare and load the TorchANI ASE calculator.
+
+        Returns
+        -------
+        Calculator
+            Loaded ASE TorchANI Calculator.
+        """
+        import torchani
+
+        model = getattr(torchani.models, self.model_name)()
+
+        device = self.device
+        if device == Device.AUTO or device == "auto":
+            device = Device.resolve_auto()
+        if device is not None:
+            model = model.to(device)
+
+        return model.ase()
+
+    @property
+    def available(self) -> bool:
+        """
+        Check whether the torchani package is available.
+
+        Returns
+        -------
+        bool
+            Whether the calculator can be loaded.
+        """
+        try:
+            import torchani  # noqa: F401
+
+            return True
+        except ImportError:
             return False
