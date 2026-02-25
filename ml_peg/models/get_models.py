@@ -103,6 +103,7 @@ def load_models(models: None | str | Iterable = None) -> dict[str, Any]:
         GenericASECalc,
         OrbCalc,
         PetMadCalc,
+        TBLiteCalc,
     )
 
     loaded_models = {}
@@ -130,6 +131,12 @@ def load_models(models: None | str | Iterable = None) -> dict[str, Any]:
                 model_name=kwargs.get("model_name", "ANI2x"),
                 device=cfg.get("device", "cpu"),
                 default_dtype=cfg.get("default_dtype", "float32"),
+                trained_on_d3=cfg.get("trained_on_d3", False),
+                d3_kwargs=cfg.get("d3_kwargs", {}),
+            )
+        elif cfg["class_name"] == "TBLiteCalc":
+            loaded_models[name] = TBLiteCalc(
+                method=cfg.get("method", "GFN2-xTB"),
                 trained_on_d3=cfg.get("trained_on_d3", False),
                 d3_kwargs=cfg.get("d3_kwargs", {}),
             )

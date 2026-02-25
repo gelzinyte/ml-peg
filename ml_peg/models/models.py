@@ -331,3 +331,45 @@ class ANICalc(SumCalc):
             return True
         except ImportError:
             return False
+
+
+@dataclasses.dataclass(kw_only=True)
+class TBLiteCalc(SumCalc):
+    """Dataclass for tblite calculators (GFN2-xTB etc.)."""
+
+    method: str = "GFN2-xTB"
+
+    def get_calculator(self, **kwargs) -> Calculator:
+        """
+        Prepare and load the tblite ASE calculator.
+
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments (unused).
+
+        Returns
+        -------
+        Calculator
+            Loaded ASE TBLite Calculator.
+        """
+        from tblite.ase import TBLite
+
+        return TBLite(method=self.method)
+
+    @property
+    def available(self) -> bool:
+        """
+        Check whether the tblite package is available.
+
+        Returns
+        -------
+        bool
+            Whether the calculator can be loaded.
+        """
+        try:
+            from tblite.ase import TBLite  # noqa: F401
+
+            return True
+        except ImportError:
+            return False
