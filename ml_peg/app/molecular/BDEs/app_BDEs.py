@@ -34,6 +34,14 @@ class BDEsApp(BaseApp):
             DATA_PATH / "figure.CYP3A4.dft_opt_geometry.BDE_ranks.json",
             id=f"{BENCHMARK_NAME}-ranks-figure",
         )
+        scatter_gdb9_bdes = read_plot(
+            DATA_PATH / "figure.GDB9.dft_opt_geometry.BDEs.json",
+            id=f"{BENCHMARK_NAME}-gdb9-figure",
+        )
+        scatter_gdb9_ranks = read_plot(
+            DATA_PATH / "figure.GDB9.dft_opt_geometry.BDE_ranks.json",
+            id=f"{BENCHMARK_NAME}-gdb9-ranks-figure",
+        )
 
         # Assets dir will be parent directory - individual files for each system
         structs_dir = DATA_PATH / MODELS[0]
@@ -45,7 +53,12 @@ class BDEsApp(BaseApp):
         plot_from_table_column(
             table_id=self.table_id,
             plot_id=f"{BENCHMARK_NAME}-figure-placeholder",
-            column_to_plot={"Direct BDE": scatter_bdes, "BDE rank": scatter_ranks},
+            column_to_plot={
+                "Direct BDE": scatter_bdes,
+                "BDE rank": scatter_ranks,
+                "Direct BDE (small molecules)": scatter_gdb9_bdes,
+                "BDE rank (small molecules)": scatter_gdb9_ranks,
+            },
         )
 
         struct_from_scatter(

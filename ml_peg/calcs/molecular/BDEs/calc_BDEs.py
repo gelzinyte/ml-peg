@@ -23,13 +23,11 @@ MODELS = load_models(current_models)
 
 OUT_PATH = Path(__file__).parent / "outputs"
 
-DFT_OPT_FILENAME = "cytochrome_p450_substrates.dft_opt.xyz"
-
 
 def evaluate_bde_structures(
     model_name: str,
     model: Any,
-    bde_dir: Path,
+    input_xyz_file: Path,
     out_filename: str,
     geom_opt: bool = False,
 ) -> None:
@@ -42,8 +40,8 @@ def evaluate_bde_structures(
         Name of the model, used to determine the output directory.
     model
         Model object providing get_calculator() and add_d3_calculator().
-    bde_dir
-        Directory containing the input xyz file.
+    input_xyz_file
+        The input xyz file.
     out_filename
         Name of the output xyz file.
     geom_opt
@@ -53,7 +51,7 @@ def evaluate_bde_structures(
     calc = model.get_calculator()
     calc = model.add_d3_calculator(calc)
 
-    mols_rads = read(bde_dir / DFT_OPT_FILENAME, ":")
+    mols_rads = read(input_xyz_file, ":")
 
     ats_out = []
     for at in mols_rads:
@@ -91,10 +89,11 @@ def test_bond_dissociation_energy(mlip: tuple[str, Any]) -> None:
         / "BDEs"
     )
 
-    evaluate_bde_structures(
-        model_name=model_name,
-        model=model,
-        bde_dir=bde_dir,
-        out_filename=DFT_OPT_FILENAME,
-        geom_opt=False,
-    )
+    for input_xyz_file in bde_dir.glob("*.xyz"):
+        evaluate_bde_structures(
+            model_name=model_name,
+            model=model,
+            input_xyz_file=input_xyz_file.resolve(),
+            out_filename=input_xyz_file.name,
+            geom_opt=False,
+        )
