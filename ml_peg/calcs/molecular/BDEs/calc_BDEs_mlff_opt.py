@@ -18,9 +18,8 @@ from ml_peg.models.models import current_models
 
 MODELS = load_models(current_models)
 
-MLFF_OPT_FILENAME = "cytochrome_p450_substrates.mlff_opt.xyz"
 
-
+@pytest.mark.skip(reason="no geo opt for now")
 @pytest.mark.parametrize("mlip", MODELS.items())
 def test_bond_dissociation_energy_mlff_opt(mlip: tuple[str, Any]) -> None:
     """
@@ -46,10 +45,13 @@ def test_bond_dissociation_energy_mlff_opt(mlip: tuple[str, Any]) -> None:
         / "BDEs"
     )
 
-    evaluate_bde_structures(
-        model_name=model_name,
-        model=model,
-        bde_dir=bde_dir,
-        out_filename=MLFF_OPT_FILENAME,
-        geom_opt=True,
-    )
+    for input_xyz_file in bde_dir.glob("*.xyz"):
+        out_filename = input_xyz_file.name.replace(".dft_opt.xyz", ".mlff_opt.xyz")
+
+        evaluate_bde_structures(
+            model_name=model_name,
+            model=model,
+            input_xyz_file=input_xyz_file.resolve(),
+            out_filename=out_filename,
+            geom_opt=True,
+        )

@@ -7,6 +7,28 @@ bde_mace:
   level_of_theory: ωB97M-V/def2-TZVPD
   kwargs:
     model: "/home/elena/code/ml-peg/4.create_test/4.evaluate_old_mace/mace.model"
+mace-matpes-r2scan:
+  module: mace.calculators
+  class_name: mace_mp
+  device: "cuda"
+  default_dtype: float32
+  trained_on_d3: false
+  level_of_theory: r2SCAN
+  kwargs:
+    model: "mace-matpes-r2scan-0"
+    head: "matpes_pbe"
+  d3_kwargs:
+    xc: r2scan
+
+MACE-OFF23(L):
+  module: mace.calculators
+  class_name: mace_off
+  device: "auto"
+  default_dtype: float64
+  trained_on_d3: true
+  kwargs:
+    name: large
+
 # ani-2x:
 #   module: torchani.models
 #   class_name: ANICalc
@@ -63,27 +85,17 @@ bde_mace:
 # #   kwargs:
 # #     model: "medium-omat-0"
 # #
-mace-matpes-r2scan:
-  module: mace.calculators
-  class_name: mace_mp
-  device: "auto"
-  default_dtype: float32
-  trained_on_d3: false
-  level_of_theory: r2SCAN
-  kwargs:
-    model: "mace-matpes-r2scan-0"
-    head: "matpes_pbe"
-  d3_kwargs:
-    xc: r2scan
-
-MACE-OFF23(L):
-  module: mace.calculators
-  class_name: mace_off
-  device: "auto"
-  default_dtype: float64
-  trained_on_d3: true
-  kwargs:
-    name: large
+#
+# mace-omat-0:
+#   module: mace.calculators
+#   class_name: mace_mp
+#   device: "auto"
+#   default_dtype: float32
+#   trained_on_d3: false
+#   level_of_theory: PBE
+#   kwargs:
+#     model: "medium-omat-0"
+#
 #
 # # mace-mh-1-omat:
 # #   module: mace.calculators
@@ -146,6 +158,30 @@ MACE-OFF23(L):
 # orb-v3-consv-inf-omat:
 #   module: orb_models.forcefield
 #   class_name: OrbCalc
+# mace-mh-1-omat:
+#   module: mace.calculators
+#   class_name: mace_mp
+#   device: "auto"
+#   default_dtype: float32
+#   trained_on_d3: false
+#   level_of_theory: PBE
+#   kwargs:
+#     model: "mh-1"
+#     head: omat_pbe
+
+# orb-v3-consv-inf-omat:
+#   module: orb_models.forcefield
+#   class_name: OrbCalc
+#   device: "cpu"
+#   default_dtype: float32-high
+#   trained_on_d3: false
+#   level_of_theory: PBE
+#   kwargs:
+#     name: "orb_v3_conservative_inf_omat"
+#
+# mattersim-5M:
+#   module: mattersim.forcefield
+#   class_name: MatterSimCalculator
 #   device: "cpu"
 #   default_dtype: float32-high
 #   trained_on_d3: false
@@ -194,6 +230,55 @@ MACE-OFF23(L):
 # #     model_name: "uma-s-1p1"
 # #     task_name: "omol"
 #
+# pet-mad:
+#   module: pet_mad.calculator
+#   class_name: PETMADCalculator
+#   device: "cpu"
+#   default_dtype: float32
+#   trained_on_d3: false
+#   level_of_theory: PBEsol
+
+# mace-omol:
+#   module: mace.calculators
+#   class_name: mace_omol
+#   device: "auto"
+#   trained_on_d3: true
+#   level_of_theory: ωB97M-V/def2-TZVPD
+#   default_dtype: float64
+#   kwargs:
+#     model: "extra_large"
+#
+# mace-mh-1-omol:
+#   module: mace.calculators
+#   class_name: mace_mp
+#   device: "auto"
+#   default_dtype: float64
+#   trained_on_d3: true
+#   level_of_theory: ωB97M-V/def2-TZVPD
+#   kwargs:
+#     model: "mh-1"
+#     head: omol
+
+# uma-m-1p1-omol:
+#   module: fairchem.core
+#   class_name: FAIRChemCalculator
+#   device: "cpu"
+#   trained_on_d3: true
+#   level_of_theory: ωB97M-V/def2-TZVPD
+#   kwargs:
+#     model_name: "uma-m-1p1"
+#     task_name: "omol"
+
+# uma-s-1p1-omol:
+#   module: fairchem.core
+#   class_name: FAIRChemCalculator
+#   device: "cpu"
+#   trained_on_d3: true
+#   level_of_theory: ωB97M-V/def2-TZVPD
+#   kwargs:
+#     model_name: "uma-s-1p1"
+#     task_name: "omol"
+
 # pet-mad:
 #   module: pet_mad.calculator
 #   class_name: PETMADCalculator

@@ -34,6 +34,7 @@ EV_TO_KCAL_PER_MOL = units.mol / units.kcal
 # fixtures without appearing in the returned dict (which would add a scatter trace).
 _COMPOUND_LABELS: list[str] = []
 _MLFF_COMPOUND_LABELS: list[str] = []
+_GDB9_COMPOUND_LABELS: list[str] = []
 
 
 def into_dict_of_labels(atoms, key):
@@ -82,7 +83,7 @@ def get_bde(mol_energy, rad_energy, isolated_h_energy):
     return rad_energy + isolated_h_energy - mol_energy
 
 
-def get_hover_data_labels(key) -> list[str]:
+def get_hover_data_labels(key, dataset_name: str) -> list[str]:
     """
     Get labels based on the key.
 
@@ -90,6 +91,9 @@ def get_hover_data_labels(key) -> list[str]:
     ----------
     key : str
         Key in atoms.info to retrieve labels from.
+    dataset_name : str
+        Dataset stem to filter xyz files, e.g. "cytochrome_p450_substrates"
+        or "gdb9_subset".
 
     Returns
     -------
@@ -100,7 +104,7 @@ def get_hover_data_labels(key) -> list[str]:
     for model_name in MODELS:
         model_dir = CALC_PATH / model_name
         if model_dir.exists():
-            xyz_files = sorted(model_dir.glob("*.xyz"))
+            xyz_files = sorted(model_dir.glob(f"{dataset_name}.*.xyz"))
             if xyz_files:
                 for xyz_file in xyz_files:
                     atoms = read(xyz_file, ":")
@@ -214,12 +218,14 @@ def mean_kendalls_tau(ref_by_label, pred_by_label):
 # ---------------------------------------------------------------------------
 
 
-def _load_bdes(xyz_suffix: str, labels_out: list) -> dict[str, list]:
+def _load_bdes(dataset_name: str, xyz_suffix: str, labels_out: list) -> dict[str, list]:
     """
     Load BDEs from output xyz files for all models.
 
     Parameters
     ----------
+    dataset_name
+        Dataset to be loaded, one of: "cytochrome_p450_substrates" or "gdb9_subset".
     xyz_suffix
         Suffix of the xyz filename, e.g. "dft_opt" or "mlff_opt".
     labels_out
@@ -230,7 +236,7 @@ def _load_bdes(xyz_suffix: str, labels_out: list) -> dict[str, list]:
     dict[str, list]
         Dictionary of reference and predicted BDEs keyed by model name and "ref".
     """
-    xyz_filename = f"cytochrome_p450_substrates.{xyz_suffix}.xyz"
+    xyz_filename = f"{dataset_name}.{xyz_suffix}.xyz"
     results = {"ref": []} | {mlip: [] for mlip in MODELS}
     labels_out.clear()
     ref_stored = False
@@ -354,11 +360,11 @@ def _compute_rank_correlations(ranks: dict, labels: list) -> dict[str, float]:
 @pytest.fixture
 @plot_parity(
     filename=OUT_PATH / "figure.CYP3A4.dft_opt_geometry.BDEs.json",
-    title="Bond Dissociation Energies on DFT Geometries",
+    title="Bond Dissociation Energies on DFT Geometries (large molecules)",
     x_label="Predicted BDE / kcal/mol",
     y_label="Reference BDE / kcal/mol",
     hoverdata={
-        "Compound": get_hover_data_labels("compound"),
+        "Compound": get_hover_data_labels("compound", "cytochrome_p450_substrates"),
     },
 )
 def dft_geometry_bdes() -> dict[str, list]:
@@ -371,17 +377,17 @@ def dft_geometry_bdes() -> dict[str, list]:
         Dictionary of reference and predicted BDEs and labels of the
         compound for the corresponding BDE.
     """
-    return _load_bdes("dft_opt", _COMPOUND_LABELS)
+    return _load_bdes("cytochrome_p450_substrates", "dft_opt", _COMPOUND_LABELS)
 
 
 @pytest.fixture
 @plot_parity(
     filename=OUT_PATH / "figure.CYP3A4.dft_opt_geometry.BDE_ranks.json",
-    title="Bond Dissociation Energy ranks on DFT Geometries",
+    title="Bond Dissociation Energy Ranks on DFT Geometries (large molecules)",
     x_label="Predicted BDE rank",
     y_label="Reference BDE rank",
     hoverdata={
-        "Compound": get_hover_data_labels("compound"),
+        "Compound": get_hover_data_labels("compound", "cytochrome_p450_substrates"),
     },
 )
 def dft_geometry_bde_ranks(dft_geometry_bdes) -> dict[str, list]:
@@ -449,11 +455,11 @@ def dft_geometry_bde_rank_correlations(dft_geometry_bde_ranks) -> dict[str, floa
 @pytest.fixture
 @plot_parity(
     filename=OUT_PATH / "figure.CYP3A4.mlff_opt_geometry.BDEs.json",
-    title="Bond Dissociation Energies on MLFF Geometries",
+    title="Bond Dissociation Energies on MLFF Geometries (large molecules)",
     x_label="Predicted BDE / kcal/mol",
     y_label="Reference BDE / kcal/mol",
     hoverdata={
-        "Compound": get_hover_data_labels("compound"),
+        "Compound": get_hover_data_labels("compound", "cytochrome_p450_substrates"),
     },
 )
 def mlff_geometry_bdes() -> dict[str, list]:
@@ -466,17 +472,17 @@ def mlff_geometry_bdes() -> dict[str, list]:
         Dictionary of reference and predicted BDEs and labels of the
         compound for the corresponding BDE.
     """
-    return _load_bdes("mlff_opt", _MLFF_COMPOUND_LABELS)
+    return _load_bdes("cytochrome_p450_substrates", "mlff_opt", _MLFF_COMPOUND_LABELS)
 
 
 @pytest.fixture
 @plot_parity(
     filename=OUT_PATH / "figure.CYP3A4.mlff_opt_geometry.BDE_ranks.json",
-    title="Bond Dissociation Energy ranks on MLFF Geometries",
+    title="Bond Dissociation Energy Ranks on MLFF Geometries (large molecules)",
     x_label="Predicted BDE rank",
     y_label="Reference BDE rank",
     hoverdata={
-        "Compound": get_hover_data_labels("compound"),
+        "Compound": get_hover_data_labels("compound", "cytochrome_p450_substrates"),
     },
 )
 def mlff_geometry_bde_ranks(mlff_geometry_bdes) -> dict[str, list]:
@@ -537,6 +543,105 @@ def mlff_geometry_bde_rank_correlations(mlff_geometry_bde_ranks) -> dict[str, fl
 
 
 # ---------------------------------------------------------------------------
+# GDB9 (small molecules) DFT-geometry fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+@plot_parity(
+    filename=OUT_PATH / "figure.GDB9.dft_opt_geometry.BDEs.json",
+    title="Bond Dissociation Energies on DFT Geometries (small molecules)",
+    x_label="Predicted BDE / kcal/mol",
+    y_label="Reference BDE / kcal/mol",
+    hoverdata={
+        "Compound": get_hover_data_labels("compound", "gdb9_subset"),
+    },
+)
+def gdb9_dft_geometry_bdes() -> dict[str, list]:
+    """
+    Compute BDEs for all sp3 H atoms on DFT optimised geometries for GDB9 subset.
+
+    Returns
+    -------
+    dict[str, list]
+        Dictionary of reference and predicted BDEs and labels of the
+        compound for the corresponding BDE.
+    """
+    return _load_bdes("gdb9_subset", "dft_opt", _GDB9_COMPOUND_LABELS)
+
+
+@pytest.fixture
+@plot_parity(
+    filename=OUT_PATH / "figure.GDB9.dft_opt_geometry.BDE_ranks.json",
+    title="Bond Dissociation Energy Ranks on DFT Geometries (small molecules)",
+    x_label="Predicted BDE rank",
+    y_label="Reference BDE rank",
+    hoverdata={
+        "Compound": get_hover_data_labels("compound", "gdb9_subset"),
+    },
+)
+def gdb9_dft_geometry_bde_ranks(gdb9_dft_geometry_bdes) -> dict[str, list]:
+    """
+    Compute BDE ranks for all sp3 H atoms using DFT optimised geometries (GDB9).
+
+    Parameters
+    ----------
+    gdb9_dft_geometry_bdes : dict[str, list]
+        Dictionary of reference and predicted BDEs.
+
+    Returns
+    -------
+    dict[str, list]
+        Dictionary of reference and predicted BDE ranks.
+    """
+    return _compute_ranks(gdb9_dft_geometry_bdes, _GDB9_COMPOUND_LABELS)
+
+
+@pytest.fixture
+def gdb9_dft_geometry_bde_errors(gdb9_dft_geometry_bdes) -> dict[str, float]:
+    """
+    Get mean absolute error for bond dissociation energies on GDB9 subset.
+
+    Parameters
+    ----------
+    gdb9_dft_geometry_bdes
+        Dictionary of reference and predicted BDEs.
+
+    Returns
+    -------
+    dict[str, float]
+        Dictionary of predicted BDE errors for all models.
+    """
+    return _compute_bde_errors(gdb9_dft_geometry_bdes)
+
+
+@pytest.fixture
+def gdb9_dft_geometry_bde_rank_correlations(
+    gdb9_dft_geometry_bde_ranks,
+) -> dict[str, float]:
+    """
+    Compute mean Kendall's tau rank correlation across all GDB9 molecules.
+
+    For each molecule, sp3 C-H bond strengths are ranked from lowest to
+    highest by both DFT and MLIP, and the correlation is measured by
+    Kendall's tau. The final metric is the average across all molecules.
+
+    Parameters
+    ----------
+    gdb9_dft_geometry_bde_ranks : dict[str, list]
+        Dictionary of reference and predicted BDE ranks.
+
+    Returns
+    -------
+    dict[str, float]
+        Dictionary of predicted BDE rank correlation for all models.
+    """
+    return _compute_rank_correlations(
+        gdb9_dft_geometry_bde_ranks, _GDB9_COMPOUND_LABELS
+    )
+
+
+# ---------------------------------------------------------------------------
 # Metrics table
 # ---------------------------------------------------------------------------
 
@@ -553,6 +658,8 @@ def metrics(
     dft_geometry_bde_rank_correlations: dict[str, float],
     mlff_geometry_bde_errors: dict[str, float],
     mlff_geometry_bde_rank_correlations: dict[str, float],
+    gdb9_dft_geometry_bde_errors: dict[str, float],
+    gdb9_dft_geometry_bde_rank_correlations: dict[str, float],
 ) -> dict[str, dict]:
     """
     Get all BDE metrics.
@@ -560,13 +667,17 @@ def metrics(
     Parameters
     ----------
     dft_geometry_bde_errors
-        Mean absolute errors on DFT-relaxed structures.
+        Mean absolute errors on large-molecule DFT-relaxed structures.
     dft_geometry_bde_rank_correlations
-        Mean Kendall's tau across predicted and reference BDE ranks on DFT geometries.
+        Mean Kendall's tau on large-molecule DFT geometries.
     mlff_geometry_bde_errors
-        Mean absolute errors on MLFF-relaxed structures.
+        Mean absolute errors on large-molecule MLFF-relaxed structures.
     mlff_geometry_bde_rank_correlations
-        Mean Kendall's tau across predicted and reference BDE ranks on MLFF geometries.
+        Mean Kendall's tau on large-molecule MLFF geometries.
+    gdb9_dft_geometry_bde_errors
+        Mean absolute errors on small-molecule DFT-relaxed structures.
+    gdb9_dft_geometry_bde_rank_correlations
+        Mean Kendall's tau on small-molecule DFT geometries.
 
     Returns
     -------
@@ -578,6 +689,8 @@ def metrics(
         "BDE rank": dft_geometry_bde_rank_correlations,
         "Direct BDE (MLFF opt)": mlff_geometry_bde_errors,
         "BDE rank (MLFF opt)": mlff_geometry_bde_rank_correlations,
+        "Direct BDE (small molecules)": gdb9_dft_geometry_bde_errors,
+        "BDE rank (small molecules)": gdb9_dft_geometry_bde_rank_correlations,
     }
 
 
